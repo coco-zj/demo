@@ -1,0 +1,39 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CC	Makefile	/^CC=g++$/;"	m
+CFLAGS	Makefile	/^CFLAGS= $(COMMON_CFLAGS) -I. -I..\/apps\/libevent-2.0.21-stable\/include -I..\/apps\/redis-2.8.13\/deps\/hiredis\/$/;"	m
+InterfaceServer	InterfaceServer.cpp	/^InterfaceServer::InterfaceServer()$/;"	f	class:InterfaceServer	signature:()
+InterfaceServer	InterfaceServer.h	/^		InterfaceServer();$/;"	p	class:InterfaceServer	access:public	signature:()
+InterfaceServer	InterfaceServer.h	/^class InterfaceServer$/;"	c
+InterfaceServer::InterfaceServer	InterfaceServer.cpp	/^InterfaceServer::InterfaceServer()$/;"	f	class:InterfaceServer	signature:()
+InterfaceServer::InterfaceServer	InterfaceServer.h	/^		InterfaceServer();$/;"	p	class:InterfaceServer	access:public	signature:()
+InterfaceServer::init	InterfaceServer.h	/^		void init(InterfaceServerConfig * config);$/;"	p	class:InterfaceServer	access:public	signature:(InterfaceServerConfig * config)
+InterfaceServer::rContext	InterfaceServer.h	/^		redisContext * rContext;$/;"	m	class:InterfaceServer	access:private
+InterfaceServer::start	InterfaceServer.h	/^		void start();$/;"	p	class:InterfaceServer	access:public	signature:()
+InterfaceServer::~InterfaceServer	InterfaceServer.cpp	/^InterfaceServer::~InterfaceServer()$/;"	f	class:InterfaceServer	signature:()
+InterfaceServer::~InterfaceServer	InterfaceServer.h	/^		~InterfaceServer();$/;"	p	class:InterfaceServer	access:public	signature:()
+InterfaceServerConfig	InterfaceServer.h	/^struct InterfaceServerConfig$/;"	s
+InterfaceServerConfig::interfaceServerPort	InterfaceServer.h	/^	int interfaceServerPort;$/;"	m	struct:InterfaceServerConfig	access:public
+InterfaceServerConfig::redisIP	InterfaceServer.h	/^	char * redisIP;$/;"	m	struct:InterfaceServerConfig	access:public
+InterfaceServerConfig::redisPort	InterfaceServer.h	/^	int redisPort;$/;"	m	struct:InterfaceServerConfig	access:public
+LDFLAGS	Makefile	/^LDFLAGS= $(COMMON_LDFLAGS)$/;"	m
+OBJS	Makefile	/^OBJS = $(SOURCE:%.cpp=%.o)$/;"	m
+RedisOperator	RedisOperator.h	/^class RedisOperator $/;"	c
+SOURCES	Makefile	/^SOURCES= $(wildcard *.cpp)$/;"	m
+__INTERFACESERVER_H__	InterfaceServer.h	2;"	d
+__REDIS_OPERATOR_H__	RedisOperator.h	2;"	d
+init	InterfaceServer.cpp	/^void init(InterfaceServerConfig * config = NULL)$/;"	f	signature:(InterfaceServerConfig * config = NULL)
+init	InterfaceServer.h	/^		void init(InterfaceServerConfig * config);$/;"	p	class:InterfaceServer	access:public	signature:(InterfaceServerConfig * config)
+interfaceServerPort	InterfaceServer.h	/^	int interfaceServerPort;$/;"	m	struct:InterfaceServerConfig	access:public
+main	main.cpp	/^int main()$/;"	f	signature:()
+main	redis-cli.c	/^int main()$/;"	f
+rContext	InterfaceServer.h	/^		redisContext * rContext;$/;"	m	class:InterfaceServer	access:private
+redisIP	InterfaceServer.h	/^	char * redisIP;$/;"	m	struct:InterfaceServerConfig	access:public
+redisPort	InterfaceServer.h	/^	int redisPort;$/;"	m	struct:InterfaceServerConfig	access:public
+start	InterfaceServer.h	/^		void start();$/;"	p	class:InterfaceServer	access:public	signature:()
+~InterfaceServer	InterfaceServer.cpp	/^InterfaceServer::~InterfaceServer()$/;"	f	class:InterfaceServer	signature:()
+~InterfaceServer	InterfaceServer.h	/^		~InterfaceServer();$/;"	p	class:InterfaceServer	access:public	signature:()
