@@ -40,6 +40,10 @@ all: app server
 app:
 	$(MAKE) -C apps
 
+client:
+	 g++ client.cpp common/query.pb.cc -lprotobuf -o client 
+
+
 cleanall: clean cleanapp
 
 cleanapp:
