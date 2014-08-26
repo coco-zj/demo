@@ -7,7 +7,7 @@ LIBS= -lz -lhiredis -levent -lprotobuf
 SOURCES=$(wildcard *.cpp)
 OBJS = $(SOURCES:%.cpp=%.o)
 
-server.o: $(OBJS)
+server.o: $(OBJS) DbOperator.o
 	$(LD) $(LDFLAGS) -r -o $@ $(OBJS) $(LIBS)
 $(OBJS):
 	$(CC) $(CXXFLAGS) -c $(patsubst %.o, %.cpp, $@)

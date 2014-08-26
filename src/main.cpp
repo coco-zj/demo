@@ -21,7 +21,11 @@ int main()
         cout << "server init failed" << endl;
         exit(-1);
     }
-	
+   
+
+    //before start we should start all other components
+    //like: handler threads etc
+
 	server.start();
 
 

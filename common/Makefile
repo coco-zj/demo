@@ -2,19 +2,19 @@ CXXFLAGS= $(COMMON_CFLAGS) -I .
 
 LDFLAGS= $(COMMON_LDFLAGS)
 
-SOURCES = $(wildcard *.cc)
-OBJS = $(SOURCES:.cc=.o)
+SOURCES = $(wildcard *.cpp)
+OBJS = $(SOURCES:.cpp=.o)
 
 common.o: $(OBJS)
 	$(LD) $(LDFLAGS) -r -o $@ $(OBJS)
 
 $(OBJS):
-	$(CC) $(CXXFLAGS) -c $(patsubst %.o, %.cc, $@)
+	$(cpp) $(CXXFLAGS) -c $(patsubst %.o, %.cpp, $@)
 
 ifneq ($(MAKECMDGOALS),clean)
--include $(SOURCES:%.cc=%.d)
-%.d: %.cc
-	$(CC) -MM $(CXXFLAGS) $< > $@
+-include $(SOURCES:%.cpp=%.d)
+%.d: %.cpp
+	$(cpp) -MM $(CXXFLAGS) $< > $@
 	@sed -i 's/^\(.*\)\.o[: ]*/\1\.o $@: /' $@
 endif
 

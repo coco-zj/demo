@@ -3,7 +3,7 @@ export
 CC=g++
 
 COMMON_CXXFLAGS := -Wall -O2 -fno-common -Wwrite-strings 
-COMMON_LDFLAGS := -L/usr/lib/x86_64-linux-gnu/ #-L./apps/redis-2.8.13/deps/hiredis/ -L./apps/libevent-2.0.21-stable/.libs/
+COMMON_LDFLAGS := -L/usr/lib/x86_64-linux-gnu/#-L./apps/redis-2.8.13/deps/hiredis/ -L./apps/libevent-2.0.21-stable/.libs/
 
 ifdef DEBUG
 COMMON_CXXFLAGS += -DDEBUG
@@ -17,10 +17,16 @@ LDFLAGS := $(COMMON_LDFLAGS) #-lhiredis -levent -lprotobuf
 
 LIBS := -lz
 
-SUBDIRS := common src
+SUBDIRS := protos src
 
-OBJS := common/common.o src/server.o ./apps/libevent-2.0.21-stable/.libs/libevent.so ./apps/redis-2.8.13/deps/hiredis/libhiredis.a \
+LIBOBJS := ./apps/libevent-2.0.21-stable/.libs/libevent.so ./apps/redis-2.8.13/deps/hiredis/libhiredis.a \
 		./apps/protobuf-2.5.0/src/.libs/libprotobuf.so
+
+
+
+OBJS := protos/protos.o src/server.o \
+	./apps/libevent-2.0.21-stable/.libs/libevent.so ./apps/redis-2.8.13/deps/hiredis/libhiredis.a \
+	./apps/protobuf-2.5.0/src/.libs/libprotobuf.so
 
 server: $(patsubst %, _dir_%, $(SUBDIRS))
 	$(CC) -o $@ ${LDFLAGS} $(OBJS)
@@ -42,7 +48,7 @@ app:
 	$(MAKE) -C apps
 
 client: 
-	$(CC) client.cpp common/query.pb.cc $(COMMON_LDFLAGS) -lprotobuf -lz -o client
+	$(CC) client.cpp proto/query.pb.cc $(COMMON_LDFLAGS) -lprotobuf -lz -o client
 
 
 cleanall: clean cleanapp
