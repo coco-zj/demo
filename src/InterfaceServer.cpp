@@ -14,6 +14,7 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 
+#include "../common/protobuf_codec.h"
 #include "../common/query.pb.h"
 
 #include "InterfaceServer.h"
@@ -67,7 +68,7 @@ InterfaceServer::~InterfaceServer()
 
 }
 
-
+/*  
 google::protobuf::Message* createMessage(const string& typeName)
 {
     google::protobuf::Message* message = NULL;
@@ -84,7 +85,13 @@ google::protobuf::Message* createMessage(const string& typeName)
     }
     return message;
 }
+*/
 
+
+void message_handle(google::protobuf::Message * message)
+{
+    
+}
 
 //typedef void(* bufferevent_data_cb)(struct bufferevent *bev, void *ctx)
 void bufferevent_on_read(struct bufferevent *bev, void * arg)
@@ -92,23 +99,49 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
     printf("read callback called\n");
 
     InterfaceServer * server  = (InterfaceServer*) arg;
-    
     struct evbuffer * evInputBuffer = bufferevent_get_input(bev);
     
     size_t buffer_len = evbuffer_get_length(evInputBuffer);
-    printf("buffer_len is %d\n", buffer_len);
-
+    printf("buffer_len is %lu\n", buffer_len);
     if (buffer_len < 4)
         return;
 
     int record_len;
+    evbuffer_copyout(evInputBuffer, &record_len, kHeaderLen);
+    record_len = ntohl(record_len);
+    printf("record_len is %d\n", record_len);
 
-    evbuffer_copyout(evInputBuffer, &record_len, 4);
-    printf("record_len is %u\n", record_len);
-
-    if (buffer_len < record_len + 4)
+    if (buffer_len < record_len + kHeaderLen)
         return;
     
+    char * record = (char*) malloc(record_len);
+    if (!record)
+        return;
+    evbuffer_drain(evInputBuffer, kHeaderLen);
+    evbuffer_remove(evInputBuffer, record, record_len);
+
+    string msg(record,record_len);
+
+    google::protobuf::Message * message = decode(msg);
+    if (!message)
+    {
+        printf("decode failed\n");
+    }
+    else
+    {
+        Query * q = dynamic_cast<Query*>(message);
+        printf("Query received(id:%d,from:%s)\n", q->id(), q->from().c_str());
+        char output[64];
+        memset(output, '\0', sizeof(output));
+        snprintf(output,sizeof(output)-1, "hi %s,requese id %d accepted\n",
+                q->from().c_str(), q->id());
+        bufferevent_write(bev, (void*)output, strlen(output));
+    }
+
+    delete record;
+    delete message;
+
+/*      
     char * type = NULL;
     char * record = NULL;
     record = (char*)malloc(record_len);
@@ -153,6 +186,8 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
     bufferevent_write(bev, (void*)output, strlen(output));
     
     delete message;
+    */
+
 }
 
 /*  

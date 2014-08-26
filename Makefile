@@ -3,7 +3,7 @@ export
 CC=g++
 
 COMMON_CXXFLAGS := -Wall -O2 -fno-common -Wwrite-strings 
-COMMON_LDFLAGS := #-L./apps/redis-2.8.13/deps/hiredis/ -L./apps/libevent-2.0.21-stable/.libs/
+COMMON_LDFLAGS := -L/usr/lib/x86_64-linux-gnu/ #-L./apps/redis-2.8.13/deps/hiredis/ -L./apps/libevent-2.0.21-stable/.libs/
 
 ifdef DEBUG
 COMMON_CXXFLAGS += -DDEBUG
@@ -15,6 +15,7 @@ export COMMON_LDFLAGS
 CXXFLAGS := $(COMMON_CXXFLAGS) #-I./apps/redis-2.8.13/deps/hiredis/ -I./apps/libevent-2.0.21-stable/include/
 LDFLAGS := $(COMMON_LDFLAGS) #-lhiredis -levent -lprotobuf
 
+LIBS := -lz
 
 SUBDIRS := common src
 
@@ -40,8 +41,8 @@ all: app server
 app:
 	$(MAKE) -C apps
 
-client:
-	 g++ client.cpp common/query.pb.cc -lprotobuf -o client 
+client: 
+	$(CC) client.cpp common/query.pb.cc $(COMMON_LDFLAGS) -lprotobuf -lz -o client
 
 
 cleanall: clean cleanapp

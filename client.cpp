@@ -29,7 +29,7 @@
 #include <errno.h>
 
 #include <google/protobuf/message.h>
-
+#include "common/protobuf_codec.h"
 #include "common/query.pb.h"
 
 using namespace std;
@@ -84,11 +84,19 @@ int main()
     q.set_id(1);
     q.set_from("zj");
    
-    string result;
-    int len;
-    makeTransportData(q, result, len);
+//    makeTransportData(q, result, len);
+    string result = encode(q);
+    
+    int len = 0;
+    copy(result.begin(), result.begin()+sizeof(int), reinterpret_cast<char*>(&len));
+    len = ntohl(len);
+    printf("sizeread:%d, sizereal:%lu\n",len,result.size()-sizeof(int));
 
-    if( send(sockfd, result.c_str(), len+4, 0) < 0 )
+    for(int i=0; i < result.size(); ++i)
+        cout << (int)*(result.c_str()+i) << " ";
+    cout << endl;
+
+    if( send(sockfd, result.c_str(), result.size(), 0) < 0 )
     {
         printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
         exit(0);
