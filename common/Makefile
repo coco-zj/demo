@@ -9,12 +9,12 @@ common.o: $(OBJS)
 	$(LD) $(LDFLAGS) -r -o $@ $(OBJS)
 
 $(OBJS):
-	$(cpp) $(CXXFLAGS) -c $(patsubst %.o, %.cpp, $@)
+	$(CC) $(CXXFLAGS) -c $(patsubst %.o, %.cpp, $@)
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(SOURCES:%.cpp=%.d)
 %.d: %.cpp
-	$(cpp) -MM $(CXXFLAGS) $< > $@
+	$(CC) -MM $(CXXFLAGS) $< > $@
 	@sed -i 's/^\(.*\)\.o[: ]*/\1\.o $@: /' $@
 endif
 

@@ -2,51 +2,37 @@
 #define __INTERFACESERVER_H__
 
 #include <hiredis.h>
-
-struct InterfaceServerConfig
-{
-	int interfaceServerPort;
-
-	char redisIP[20];
-	int redisPort;
-};
+#include "../common/common.h"
 
 
-
-
-#define REDIS_PORT  6379
-#define SERVER_PORT 9999
+#define SERVER_PORT  9999
 #define SERVER_BACKLOG 500
-
-
 
 
 class InterfaceServer
 {
 	public:
-		InterfaceServer(InterfaceServerConfig *cfg);
+		InterfaceServer(int port);
 		~InterfaceServer();
 
-		int init();
+		int init(readCallBackFun * rcb);
 
 		void start();
-        void queryRedis(char * query);
-
-        struct event_base * getEventBase();
 
     public:
         int nConnections;
 
 
+    public:
+        readCallBackFun * rcb;
+
 	private:
         //config
-        InterfaceServerConfig config;
-        //redis context
-        redisContext * rContext;
+        int port;
+ 
         //event context
         struct event_base * evbase;
         struct evconnlistener * listener;
-
 };
 
 

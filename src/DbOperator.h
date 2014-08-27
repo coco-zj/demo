@@ -33,9 +33,11 @@ class DbOperator
     public:
         DbOperator();
         DbOperator(string h, int p, string pass);
-        virtual ~DbOperator(){};
+        
+        //pure but we should also provide implementation of this
+        virtual ~DbOperator() = 0;
 
-        virtual void query(string queryString){};
+        virtual void query(string queryString) = 0;
 
 
         inline const string getHost()

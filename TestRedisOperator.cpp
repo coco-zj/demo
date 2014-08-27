@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  DbOperator.cpp
+ *       Filename:  TestRedisOperator.cpp
  *
  *    Description:  
  *
  *        Version:  1.0
- *        Created:  08/26/2014 08:40:13 PM
+ *        Created:  08/27/2014 10:03:42 AM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,31 +16,24 @@
  * =====================================================================================
  */
 
+#include <iostream>
 #include <string>
 
-#include "DbOperator.h"
+#include "src/DbOperator.h"
+#include "src/RedisOperator.h"
+
+using namespace std;
 
 
-DbOperator::DbOperator()
+int main()
 {
-    host = string("127.0.0.1");
-    port = -1;
-    password = string("nopassword");
-}
+    RedisOperator *p = new RedisOperator("125.88.168.100",6379,"");
+    p->selectDatabase("15");
 
-DbOperator::DbOperator(string h, int p, string pass)
-{
-    host = h;
-    port = p;
-    password = pass;
-}
+    string res = p->queryString("hget TOKEN_HASH 109");
+    cout << res << endl;
 
-   
-DbOperator::~DbOperator()
-{
-   
 }
-  
 
 
 

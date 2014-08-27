@@ -11,8 +11,6 @@
 #include <event2/bufferevent.h>
 #include <event2/listener.h>
 
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/message.h>
 
 #include "../common/protobuf_codec.h"
 #include "../protos/query.pb.h"
@@ -23,26 +21,11 @@
 using namespace std;
 
 
-InterfaceServer::InterfaceServer(InterfaceServerConfig * cfg)
+InterfaceServer::InterfaceServer(int port)
 {
     this->nConnections = 0;
+    this->port = (port < 65535 && port > 1024) ? port : SERVER_PORT;
 
-    if( cfg )
-    {
-        snprintf(this->config.redisIP, sizeof(this->config.redisIP),
-                "%s", cfg->redisIP);
-        this->config.redisPort = cfg->redisPort;
-        this->config.interfaceServerPort = cfg->interfaceServerPort;
-    }
-    else
-    {
-        snprintf(this->config.redisIP, sizeof(this->config.redisIP), 
-                "%s", "127.0.0.1");
-        this->config.redisPort = REDIS_PORT;
-        this->config.interfaceServerPort = SERVER_PORT;
-    }
-
-	this->rContext = NULL;
     this->evbase = NULL;
     this->listener = NULL;
 }
@@ -50,11 +33,6 @@ InterfaceServer::InterfaceServer(InterfaceServerConfig * cfg)
 
 InterfaceServer::~InterfaceServer()
 {
-	if (this->rContext)
-	{
-		redisFree(this->rContext);
-		this->rContext = NULL;
-	}
     if (this->listener)
     {
         evconnlistener_free(this->listener);
@@ -103,7 +81,16 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
     evbuffer_remove(evInputBuffer, record, record_len);
 
     string msg(record,record_len);
+    delete record;
 
+    if (server->rcb)
+    {
+        printf("start to call readCallBackFun\n");
+        readCallBackFun * func = server->rcb;
+        (*func)(bev, msg);
+        printf("finish to call readCallBackFun\n");
+    }
+/*  
     google::protobuf::Message * message = decode(msg);
     if (!message)
     {
@@ -119,8 +106,6 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
                 q->from().c_str(), q->id());
         bufferevent_write(bev, (void*)output, strlen(output));
     }
-
-    delete record;
     delete message;
 
 /*      
@@ -242,15 +227,16 @@ void evconnlistener_on_accept(evconnlistener* listener, evutil_socket_t sock,
     bufferevent_enable(buffevent, EV_READ|EV_WRITE);
 }
 
-int InterfaceServer::init()
+int InterfaceServer::init(readCallBackFun * rcb)
 {
-    this->rContext = redisConnect(this->config.redisIP, this->config.redisPort);
+    this->rcb = rcb;
+
     this->evbase = event_base_new();
 
     struct sockaddr_in my_addr;
     memset(&my_addr, 0, sizeof(my_addr));
     my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(this->config.interfaceServerPort);
+    my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
     
     socklen_t socklen = sizeof(my_addr);
@@ -263,7 +249,7 @@ int InterfaceServer::init()
 
     //TODO
 	//check to see if we've init successfully
-	if (!this->rContext || !this->evbase || !this->listener)
+	if (!this->evbase || !this->listener)
 	{
 		return -1;
 	}
@@ -282,9 +268,7 @@ void InterfaceServer::start()
 
 
 
-
-
-
+/*  
 void InterfaceServer::queryRedis(char * query)
 {
     redisReply * reply = (redisReply*)redisCommand(this->rContext, query);
@@ -315,7 +299,7 @@ struct event_base * InterfaceServer::getEventBase()
 {
     return this->evbase;
 }
-
+*/
 
 
 

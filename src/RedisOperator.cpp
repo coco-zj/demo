@@ -16,12 +16,10 @@
  * =====================================================================================
  */
 
-#ifndef __REDISOPERATOR_H__
-#define __REDISOPERATOR_H__
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+
 #include "RedisOperator.h"
 
 
@@ -71,10 +69,12 @@ void RedisOperator::selectDatabase(string db)
     int dbIndex = atoi(db.c_str());
     if (dbIndex > 16 || dbIndex < 0)
     {
+        printf("out of database %d\n",dbIndex);
         return;
     }
-    if (0 != dbIndex && db.compare("0"))
+    if (0 == dbIndex && db.compare("0"))
     {
+        printf("atoi(%s) failed\n", db.c_str());
         return;
     }
     struct redisReply * reply = static_cast<redisReply*>
@@ -126,20 +126,27 @@ string RedisOperator::queryString(string queryString)
         (redisCommand(this->ctx, queryString.c_str()));
     
     string result("");
-    if (reply && reply->type == REDIS_REPLY_STRING)
+    if (!reply)
+    {
+        printf("execute redisCommand failed\n");
+    }
+    if (reply->type == REDIS_REPLY_ERROR)
+    {
+        printf("redisCommand error:%s\n", reply->str);
+    }
+    if (reply->type == REDIS_REPLY_STRING)
     {
         result = string(reply->str);
     }
     else
     {
-        printf("RedisCommand failed:%s, ErrorMsg:%s\n", 
-                queryString.c_str(),reply->str);
+        printf("RedisCommand failed:%s, ErrorMsg:%s(%d)\n", 
+                queryString.c_str(),reply->str,reply->type);
     }
     freeReplyObject(reply);
     return result;
 }
 
-#endif
 
 
 

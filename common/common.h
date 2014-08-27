@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  ThreadHandler.h
+ *       Filename:  common.h
  *
- *    Description:  thread handler
+ *    Description:  jj
  *
  *        Version:  1.0
- *        Created:  08/27/2014 10:31:22 AM
+ *        Created:  08/27/2014 03:08:23 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,11 +15,15 @@
  *
  * =====================================================================================
  */
-#ifndef __THREAD_HANLDER_H__
-#define __THREAD_HANDLER_H__
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
+#include <event2/bufferevent.h>
+#include <string>
+using namespace std;
 
 
-
+typedef void (*readCallBackFun) (struct bufferevent * bev, string data);
 
 
 #endif
