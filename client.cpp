@@ -81,7 +81,7 @@ int main()
     }
 
     Query q;
-    q.set_id(1);
+    q.set_id(1000);
     q.set_from("zj");
    
 //    makeTransportData(q, result, len);
@@ -96,7 +96,7 @@ int main()
         cout << (int)*(result.c_str()+i) << " ";
     cout << endl;
 */
-    for( int i = 0; i < 10; ++i)
+    for( int i = 0; i < 1; ++i)
     {
         if( send(sockfd, result.c_str(), result.size(), 0) < 0 )
         {
@@ -108,9 +108,9 @@ int main()
     char data[128];
     memset(data, '\0', sizeof(data));
     
-//    recv(sockfd, data, sizeof(data)-1,0);
+    recv(sockfd, data, sizeof(data)-1,0);
 
-    //printf("reveive data is %s\n", data);
+    printf("reveive data is %s\n", data);
     close(sockfd);
     return 0;
 }

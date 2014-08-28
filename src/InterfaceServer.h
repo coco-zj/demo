@@ -1,7 +1,6 @@
 #ifndef __INTERFACESERVER_H__
 #define __INTERFACESERVER_H__
 
-#include <hiredis.h>
 #include "../common/common.h"
 
 

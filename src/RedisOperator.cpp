@@ -124,7 +124,9 @@ string RedisOperator::queryString(string queryString)
 {
     struct redisReply * reply = static_cast<redisReply*>
         (redisCommand(this->ctx, queryString.c_str()));
-    
+ 
+    printf("reply->type:%d\n",reply->type);
+
     string result("");
     if (!reply)
     {

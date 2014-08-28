@@ -33,6 +33,7 @@ int main()
     string res = p->queryString("hget TOKEN_HASH 109");
     cout << res << endl;
 
+    delete p;
 }
 
 

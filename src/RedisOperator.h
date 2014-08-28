@@ -20,7 +20,7 @@
 #define __REDIS_OPERATOR_H__
 
 #include <string>
-#include <hiredis.h>
+#include <hiredis/hiredis.h>
 
 #include "DbOperator.h"
 

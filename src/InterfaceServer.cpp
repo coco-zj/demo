@@ -16,7 +16,6 @@
 #include "../protos/query.pb.h"
 
 #include "InterfaceServer.h"
-#include <hiredis.h>
 
 using namespace std;
 
