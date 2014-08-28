@@ -18,7 +18,17 @@
 #ifndef __THREAD_HANLDER_H__
 #define __THREAD_HANDLER_H__
 
+#include "../common/common.h"
 
+class ThreadHandler{
+    public:
+        ThreadHandler(ThreadFunc* func, void* arg);
+        ~ThreadHandler();
+
+    private:
+        pthread_t th;
+
+};
 
 
 

@@ -60,11 +60,15 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
 
     InterfaceServer * server  = (InterfaceServer*) arg;
     struct evbuffer * evInputBuffer = bufferevent_get_input(bev);
-    
-    size_t buffer_len = evbuffer_get_length(evInputBuffer);
+
+    size_t buffer_len = 0;
+
+    do
+    {
+    buffer_len = evbuffer_get_length(evInputBuffer);
     printf("buffer_len is %lu\n", buffer_len);
     if (buffer_len < 4)
-        return;
+        break;
 
     int record_len;
     evbuffer_copyout(evInputBuffer, &record_len, kHeaderLen);
@@ -72,11 +76,14 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
     printf("record_len is %d\n", record_len);
 
     if (buffer_len < record_len + kHeaderLen)
-        return;
+        break;
     
     char * record = (char*) malloc(record_len);
     if (!record)
-        return;
+    {
+        printf("malloc %d Bytes failed\n",record_len);
+        return ;
+    }
     evbuffer_drain(evInputBuffer, kHeaderLen);
     evbuffer_remove(evInputBuffer, record, record_len);
 
@@ -90,6 +97,9 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
         (*func)(bev, msg);
         printf("finish to call readCallBackFun\n");
     }
+    buffer_len = evbuffer_get_length(evInputBuffer);
+    printf("buffer_len left :%lu\n",buffer_len);
+    }while(buffer_len);
 /*  
     google::protobuf::Message * message = decode(msg);
     if (!message)

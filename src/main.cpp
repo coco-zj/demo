@@ -13,6 +13,7 @@
 #include "../common/protobuf_codec.h"
 #include "../protos/query.pb.h"
 
+#include "ThreadHandler.h"
 #include "InterfaceServer.h"
 
 
@@ -28,19 +29,22 @@ void doEnqueue(struct bufferevent * bev, string data)
     printf("q.size()=%d\n",q.size());
 }
 
-
-void * handler(void* arg)
+void* handler(void* arg)
 {
+    printf("running thread..\n");
+  
     Queue* q = (Queue*)arg;
     while (1)
     {
         if (q->size())
         {
             QueueNode node = q->dequeue();
+            printf("%d msg left\n",q->size());
+/*  
             printf("get queue node:%p, %s,handling...\n",
                     node.bev, node.data.c_str());
 
-            google::protobuf::Message * message = decode(node.data.c_str());
+            google::protobuf::Message * message = decode(node.data);
             if (!message)
             {
                 printf("decode failed\n");
@@ -56,52 +60,30 @@ void * handler(void* arg)
                 bufferevent_write(node.bev, (void*)output, strlen(output));
             }
             delete message;
+*/            
         }
         else
         {
-            printf("queue no data,sleeping...\n");
-            sleep(3);
+            usleep(300);
         }
     }
-}
 
+
+}
 
 int main()
 {
+    ThreadFunc pThreadFunc = handler;
+    ThreadHandler thhandler(&pThreadFunc, (void*)&q);
     
-    pthread_t* th;
-    if (pthread_create(th, NULL, handler, (void*)&q))
-    {
-        cout << "Create Thread failed" << endl;
-        exit(-1);
-    }
-
     readCallBackFun func = doEnqueue;
 
 	InterfaceServer server = InterfaceServer(9999);
     
-	if( server.init(&func) )
-    {
-        cout << "server init failed" << endl;
-        exit(-1);
-    }
-   
-    
-    //before start we should start all other components
-    //like: handler threads etc
+	server.init(&func);
+	
+    server.start();
 
-	server.start();
-
-
-
-
-
-   /*  
-    char * query = "SET foo bara";
-    server.queryRedis(query);
-    
-    server.queryRedis("GET foo");
-*/
 
     cout << "about to exit" <<endl;
     sleep(3);

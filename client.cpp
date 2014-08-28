@@ -30,7 +30,7 @@
 
 #include <google/protobuf/message.h>
 #include "common/protobuf_codec.h"
-#include "common/query.pb.h"
+#include "protos/query.pb.h"
 
 using namespace std;
 
@@ -90,25 +90,27 @@ int main()
     int len = 0;
     copy(result.begin(), result.begin()+sizeof(int), reinterpret_cast<char*>(&len));
     len = ntohl(len);
-    printf("sizeread:%d, sizereal:%lu\n",len,result.size()-sizeof(int));
-
+//    printf("sizeread:%d, sizereal:%lu\n",len,result.size()-sizeof(int));
+/*  `
     for(int i=0; i < result.size(); ++i)
         cout << (int)*(result.c_str()+i) << " ";
     cout << endl;
-
-    if( send(sockfd, result.c_str(), result.size(), 0) < 0 )
+*/
+    for( int i = 0; i < 10; ++i)
     {
-        printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
-        exit(0);
+        if( send(sockfd, result.c_str(), result.size(), 0) < 0 )
+        {
+            printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
+            exit(0);
+        }
+        printf("send one msg\n");
     }
-
     char data[128];
     memset(data, '\0', sizeof(data));
     
-    recv(sockfd, data, sizeof(data)-1,0);
+//    recv(sockfd, data, sizeof(data)-1,0);
 
-    printf("reveive data is %s\n", data);
-    
+    //printf("reveive data is %s\n", data);
     close(sockfd);
     return 0;
 }
