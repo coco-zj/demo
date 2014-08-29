@@ -108,9 +108,10 @@ int main()
     char data[128];
     memset(data, '\0', sizeof(data));
     
-    recv(sockfd, data, sizeof(data)-1,0);
+//    recv(sockfd, data, sizeof(data)-1,0);
 
-    printf("reveive data is %s\n", data);
+ //   printf("reveive data is %s\n", data);
+    sleep(30);
     close(sockfd);
     return 0;
 }

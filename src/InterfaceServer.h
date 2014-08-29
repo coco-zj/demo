@@ -14,7 +14,7 @@ class InterfaceServer
 		InterfaceServer(int port);
 		~InterfaceServer();
 
-		int init(readCallBackFun * rcb);
+		int init(MsgDispatchFunc* rcb);
 
 		void start();
 
@@ -23,7 +23,7 @@ class InterfaceServer
 
 
     public:
-        readCallBackFun * rcb;
+        MsgDispatchFunc* rcb;
 
 	private:
         //config

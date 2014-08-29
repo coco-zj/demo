@@ -11,7 +11,6 @@
 #include <event2/bufferevent.h>
 #include <event2/listener.h>
 
-
 #include "../common/protobuf_codec.h"
 #include "../protos/query.pb.h"
 
@@ -29,7 +28,6 @@ InterfaceServer::InterfaceServer(int port)
     this->listener = NULL;
 }
 
-
 InterfaceServer::~InterfaceServer()
 {
     if (this->listener)
@@ -42,14 +40,6 @@ InterfaceServer::~InterfaceServer()
         event_base_free(this->evbase);
         this->evbase = NULL;
     }
-
-}
-
-
-
-void message_handle(google::protobuf::Message * message)
-{
-    
 }
 
 //typedef void(* bufferevent_data_cb)(struct bufferevent *bev, void *ctx)
@@ -64,115 +54,44 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
 
     do
     {
-    buffer_len = evbuffer_get_length(evInputBuffer);
-    printf("buffer_len is %lu\n", buffer_len);
-    if (buffer_len < 4)
-        break;
+        buffer_len = evbuffer_get_length(evInputBuffer);
+        printf("buffer_len is %lu\n", buffer_len);
+        if (buffer_len < 4)
+            break;
+        int record_len;
+        evbuffer_copyout(evInputBuffer, &record_len, kHeaderLen);
+        record_len = ntohl(record_len);
+        printf("record_len is %d\n", record_len);
 
-    int record_len;
-    evbuffer_copyout(evInputBuffer, &record_len, kHeaderLen);
-    record_len = ntohl(record_len);
-    printf("record_len is %d\n", record_len);
-
-    if (buffer_len < record_len + kHeaderLen)
-        break;
+        if (buffer_len < record_len + kHeaderLen)
+            break;
     
-    char * record = (char*) malloc(record_len);
-    if (!record)
-    {
-        printf("malloc %d Bytes failed\n",record_len);
-        return ;
-    }
-    evbuffer_drain(evInputBuffer, kHeaderLen);
-    evbuffer_remove(evInputBuffer, record, record_len);
+        char * record = (char*) malloc(record_len);
+        if (!record)
+        {
+            printf("malloc %d Bytes failed\n",record_len);
+            return ;
+        }
+        evbuffer_drain(evInputBuffer, kHeaderLen);
+        evbuffer_remove(evInputBuffer, record, record_len);
+    
+        string msg(record,record_len);
+        delete record;
 
-    string msg(record,record_len);
-    delete record;
+        if (server->rcb)
+        {
+            printf("start to call readCallBackFun\n");
+            MsgDispatchFunc* func = server->rcb;
+            (*func)(bev, msg);
+            printf("finish to call readCallBackFun\n");
+        }
+        buffer_len = evbuffer_get_length(evInputBuffer);
+        printf("buffer_len left :%lu\n",buffer_len);
 
-    if (server->rcb)
-    {
-        printf("start to call readCallBackFun\n");
-        readCallBackFun * func = server->rcb;
-        (*func)(bev, msg);
-        printf("finish to call readCallBackFun\n");
-    }
-    buffer_len = evbuffer_get_length(evInputBuffer);
-    printf("buffer_len left :%lu\n",buffer_len);
     }while(buffer_len);
-/*  
-    google::protobuf::Message * message = decode(msg);
-    if (!message)
-    {
-        printf("decode failed\n");
-    }
-    else
-    {
-        Query * q = dynamic_cast<Query*>(message);
-        printf("Query received(id:%d,from:%s)\n", q->id(), q->from().c_str());
-        char output[64];
-        memset(output, '\0', sizeof(output));
-        snprintf(output,sizeof(output)-1, "hi %s,requese id %d accepted\n",
-                q->from().c_str(), q->id());
-        bufferevent_write(bev, (void*)output, strlen(output));
-    }
-    delete message;
-
-/*      
-    char * type = NULL;
-    char * record = NULL;
-    record = (char*)malloc(record_len);
-    if (record == NULL)
-        return;
-    evbuffer_drain(evInputBuffer, 4);
-    evbuffer_remove(evInputBuffer, record, record_len);
-
-    //Now record can be make to proto class
-    char * p = strstr(record, "\n");
-    if (!p)
-    {
-        printf("broken string\n");
-        return;
-    }
-    *p = '\0';
-    type = record;
-    string typeName(type);
-    google::protobuf::Message * message = createMessage(typeName);
-    if (!message)
-    {
-        printf("data to decode failed\n");
-        return;
-    }
-    char * protoData = p+1;
-    int protoDataLen = record_len - strlen(type) - 1;
-    if (!message->ParseFromArray(protoData, protoDataLen))
-    {
-        delete message;
-    }
-    delete record;
-    Query* q = (Query*) message;
-
-    printf("Query received(id:%d,from:%s)\n", q->id(), q->from().c_str());
-    
-    //TODO query redis
-    char output[128];
-    memset(output, '\0', sizeof(output));
-    snprintf(output,sizeof(output)-1, "hi %s,requese id %d accepted\n",
-            q->from().c_str(), q->id());
-    
-    bufferevent_write(bev, (void*)output, strlen(output));
-    
-    delete message;
-    */
 
 }
 
-/*  
-void bufferevent_on_write(struct bufferevent * bev, void * arg)
-{
-    InterfaceServer * server  = (InterfaceServer*) arg;
-
-}
-*/
 //typedef void(* bufferevent_event_cb)(struct bufferevent *bev, short what,
 //             void *ctx)
 void bufferevent_on_event(struct bufferevent * bev, short whatEvent, void * arg)
@@ -236,7 +155,7 @@ void evconnlistener_on_accept(evconnlistener* listener, evutil_socket_t sock,
     bufferevent_enable(buffevent, EV_READ|EV_WRITE);
 }
 
-int InterfaceServer::init(readCallBackFun * rcb)
+int InterfaceServer::init(MsgDispatchFunc* rcb)
 {
     this->rcb = rcb;
 
@@ -269,46 +188,11 @@ int InterfaceServer::init(readCallBackFun * rcb)
 void InterfaceServer::start()
 {
 	cout << "server started" << endl;
-
     event_base_dispatch(this->evbase);
     cout << "server ended" << endl;
 }
 
 
-
-
-/*  
-void InterfaceServer::queryRedis(char * query)
-{
-    redisReply * reply = (redisReply*)redisCommand(this->rContext, query);
-    switch( reply->type )
-    {
-    case REDIS_REPLY_INTEGER:
-        cout << reply->integer;
-        break;
-    case REDIS_REPLY_STRING:
-        cout << reply->str;
-        break;
-    case REDIS_REPLY_STATUS:
-        cout << reply->str;
-        break;
-    case REDIS_REPLY_ERROR:
-        cout << reply->str;
-        break;
-    default:
-        cout << "got error: " << reply->type << endl;
-    }
-
-
-    freeReplyObject(reply);
-}
-
-
-struct event_base * InterfaceServer::getEventBase()
-{
-    return this->evbase;
-}
-*/
 
 
 

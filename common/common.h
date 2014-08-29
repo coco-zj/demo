@@ -23,7 +23,7 @@
 using namespace std;
 
 
-typedef void (*readCallBackFun) (struct bufferevent * bev, string data);
+typedef void (*MsgDispatchFunc) (struct bufferevent * bev, string data);
 typedef void* (*ThreadFunc) (void * arg);
 
 
