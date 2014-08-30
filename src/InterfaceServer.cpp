@@ -13,6 +13,8 @@
 
 #include "../common/protobuf_codec.h"
 #include "../protos/query.pb.h"
+#include "../common/common.h"
+#include "../common/MsgContainer.h"
 
 #include "InterfaceServer.h"
 
@@ -26,6 +28,7 @@ InterfaceServer::InterfaceServer(int port)
 
     this->evbase = NULL;
     this->listener = NULL;
+    this->container = NULL;
 }
 
 InterfaceServer::~InterfaceServer()
@@ -41,7 +44,14 @@ InterfaceServer::~InterfaceServer()
         this->evbase = NULL;
     }
 }
-
+void InterfaceServer::registMsgContainer(MsgContainer * c)
+{
+    this->container = c;
+}
+MsgContainer* InterfaceServer::getMsgContainer()
+{
+    return this->container;
+}
 //typedef void(* bufferevent_data_cb)(struct bufferevent *bev, void *ctx)
 void bufferevent_on_read(struct bufferevent *bev, void * arg)
 {
@@ -77,12 +87,13 @@ void bufferevent_on_read(struct bufferevent *bev, void * arg)
     
         string msg(record,record_len);
         delete record;
+        
+        MsgContainer * c = server->getMsgContainer();
 
-        if (server->rcb)
+        if (c)
         {
             printf("start to call readCallBackFun\n");
-            MsgDispatchFunc* func = server->rcb;
-            (*func)(bev, msg);
+            c->set(bev, msg);
             printf("finish to call readCallBackFun\n");
         }
         buffer_len = evbuffer_get_length(evInputBuffer);
@@ -154,7 +165,7 @@ void evconnlistener_on_accept(evconnlistener* listener, evutil_socket_t sock,
     printf("server nConnections:%d\n",server->nConnections);
     bufferevent_enable(buffevent, EV_READ|EV_WRITE);
 }
-
+/*  
 int InterfaceServer::init(MsgDispatchFunc* rcb)
 {
     this->rcb = rcb;
@@ -183,7 +194,7 @@ int InterfaceServer::init(MsgDispatchFunc* rcb)
 	}
 	return 0;
 }
-
+*/
 
 void InterfaceServer::start()
 {

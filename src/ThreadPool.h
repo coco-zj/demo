@@ -19,10 +19,11 @@
 #ifndef __THREADPOOL_H__
 #define __THREADPOOL_H__
 
-#include <string>
 #include <vector>
 #include <list>
+
 #include "../common/common.h"
+#include "../common/Consumer.h"
 
 using namespace std;
 
@@ -40,16 +41,16 @@ struct ThreadInfo
 
 
 
-class ThreadPool
+class ThreadPool: public Consumer
 {
     public:
         ThreadPool();
-        ~ThreadPool();
+        virtual ~ThreadPool();
 
         void init(int min, int max);
         void destroy();
         void start(ThreadFunc * func);
-        void dispatch(void * arg);
+        virtual void dispatch(void * arg);
 
     private:
         int addWorker();

@@ -21,6 +21,11 @@
 
 #include <string>
 #include <event2/bufferevent.h>
+#include <pthread.h>
+
+#include "Producer.h"
+#include "Consumer.h"
+#include "MsgContainer.h"
 
 using namespace std;
 
@@ -37,16 +42,31 @@ struct QueueNode
         next = NULL;
     };
 };
+enum QueueType 
+{
+    PURE = 0,
+    HAS_PRODUCER = 1 << 1,
+    HAS_CONSUMER = 1 << 2,
+    MULTI_PRODUCER = 1 << 3,
+    MULTI_CONSUMER = 1 << 4,
+};
 
-
-class Queue
+class Queue : public MsgContainer
 {
     public:
         Queue();
-        ~Queue();
+        virtual ~Queue();
+        void registerProducer(Producer* producer, bool multi);
+        void registerConsumer(Consumer* consumer, bool multi);
+
+        void lockConsumer();
+        void unlockConsumer();
+        void lockProducer();
+        void unlockProducer();
 
         int size();
         void clear();
+        virtual void set(void * arg, string arg2);
         void enqueue(struct bufferevent * bev, string item);
         QueueNode dequeue();
 
@@ -54,6 +74,13 @@ class Queue
         int _size;
         QueueNode * head;
         QueueNode * tail;
+
+        Producer * _producer;
+        Consumer * _consumer;
+    private:
+        pthread_mutex_t producerLock;
+        pthread_mutex_t consumerLock;
+        int mode;
 };
 
 

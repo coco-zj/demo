@@ -23,6 +23,12 @@
 
 void* thread_ready(void *arg);
 
+ThreadPool::ThreadPool()
+{
+}
+ThreadPool::~ThreadPool()
+{
+}
 
 void ThreadPool::init(int min, int max)
 {

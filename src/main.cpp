@@ -12,53 +12,31 @@
 #include "../common/Queue.h"
 #include "../common/protobuf_codec.h"
 #include "../protos/query.pb.h"
-
+#include "ThreadPool.h"
 #include "RedisOperator.h"
-#include "ThreadHandler.h"
+//#include "ThreadHandler.h"
 #include "InterfaceServer.h"
 
 
 using namespace std;
 
-
-Queue q;
-pthread_mutex_t queue_mutex;
-pthread_cond_t queue_cond;
-
+/*  
 void doEnqueue(struct bufferevent * bev, string data)
 {
-    pthread_mutex_lock(&queue_mutex);
-    if (0 == q.size())
-        pthread_cond_signal(&queue_cond);
-    pthread_mutex_unlock(&queue_mutex);
-
     q.enqueue(bev, data);
-    printf("q.size()=%d\n",q.size());
-   /*   
-    pthread_mutex_lock(&queue_mutex);
-    pthread_cond_signal(&queue_cond);
-    pthread_mutex_unlock(&queue_mutex);
-    */
-
 }
-
-void* handler(void* arg)
+*/
+//this lock is used to lock consumers
+//
+void* handle(void* arg)
 {
     printf("running thread..\n");
-    RedisOperator redis("127.0.0.1", 6379, "");
+    Queue* q =(Queue*)arg;
+    q->lockConsumer();
+    QueueNode node = q->dequeue();
+    q->unlockConsumer();
 
-    Queue* q = (Queue*)arg;
-    //TODO: should use pthread_cond instead of busying waiting
-    while(1)
-    {
-        pthread_mutex_lock(&queue_mutex);
-        if (0 == q->size())
-        {
-             pthread_cond_wait(&queue_cond, &queue_mutex);
-        }
-        //here queue should have elements
-        QueueNode node = q->dequeue();
-        pthread_mutex_unlock(&queue_mutex);
+    RedisOperator redis("127.0.0.1", 6379, "");
 
             google::protobuf::Message * message = decode(node.data);
             if (!message)
@@ -94,24 +72,22 @@ void* handler(void* arg)
 */
             }
             delete message;
-    }
     return NULL;
 }
 
 int main()
 {
-    pthread_mutex_init(&queue_mutex, NULL);
-    pthread_cond_init(&queue_cond, NULL);
 
-    RedisOperator redis("127.0.0.1", 6379, "");
+    ThreadFunc pThreadFunc = handle;
+    ThreadPool pool;
+    pool.init(1,1);
+    pool.start(&pThreadFunc);
 
-    ThreadFunc pThreadFunc = handler;
-    ThreadHandler thhandler(&pThreadFunc, (void*)&q);
-   
+    Queue q;
+    q.registerConsumer(&pool, true);
 
-    MsgDispatchFunc func = doEnqueue;
 	InterfaceServer server = InterfaceServer(9999);
-	server.init(&func);
+    server.registMsgContainer(&q);
 
 
 
@@ -121,9 +97,6 @@ int main()
 
     cout << "about to exit" <<endl;
     sleep(3);
-	
-    pthread_mutex_destroy(&queue_mutex);
-    pthread_cond_destroy(&queue_cond);
 
     return 0;
 }

@@ -2,7 +2,7 @@
 #define __INTERFACESERVER_H__
 
 #include "../common/common.h"
-
+#include "../common/MsgContainer.h"
 
 #define SERVER_PORT  9999
 #define SERVER_BACKLOG 500
@@ -14,17 +14,16 @@ class InterfaceServer
 		InterfaceServer(int port);
 		~InterfaceServer();
 
-		int init(MsgDispatchFunc* rcb);
+        void registMsgContainer(MsgContainer * c);
+        MsgContainer* getMsgContainer();
 
 		void start();
-
+    
     public:
         int nConnections;
 
-
-    public:
-        MsgDispatchFunc* rcb;
-
+    private:
+        MsgContainer * container;
 	private:
         //config
         int port;
