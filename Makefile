@@ -36,6 +36,8 @@ app:
 client: 
 	$(CC) client.cpp protos/query.pb.cc $(COMMON_LDFLAGS) -lprotobuf -lz -o client
 
+slave: slave.cpp
+	$(CC) $^ -o $@ -std=c++11 -lpthread
 
 cleanall: clean cleanapp
 
