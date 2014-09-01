@@ -24,6 +24,7 @@
 
 #include "../common/common.h"
 #include "../common/Consumer.h"
+#include "RedisOperator.h"
 
 using namespace std;
 
@@ -32,11 +33,12 @@ class ThreadPool;
 struct ThreadInfo
 {
     bool existing;
+    RedisOperator * redis;
     void*  arg;
     ThreadPool* pool;
     pthread_t th;
     pthread_cond_t cond;
-    ThreadInfo(){existing = false; arg = pool = NULL;}
+    ThreadInfo(){existing = false; redis = NULL; arg = pool = NULL;}
 };
 
 
@@ -44,8 +46,8 @@ struct ThreadInfo
 class ThreadPool: public Consumer
 {
     public:
-        ThreadPool();
-        virtual ~ThreadPool();
+//        ThreadPool();
+//        virtual ~ThreadPool();
 
         void init(int min, int max);
         void destroy();
@@ -74,6 +76,14 @@ class ThreadPool: public Consumer
         unsigned int currThreads;
 
     public:
+        inline void lockPool()
+        {
+            pthread_mutex_lock(&this->lock);
+        }
+        inline void unlockPool()
+        {
+            pthread_mutex_unlock(&this->lock);
+        }
         inline pthread_mutex_t * get_lock()
         {
             return &this->lock;

@@ -3,7 +3,7 @@
 
 #include "Queue.h"
 #include "common.h"
-
+#include <stdio.h>
 
 Queue::Queue()
 {
@@ -81,7 +81,7 @@ void Queue::enqueue(struct bufferevent* bev, string str)
     QueueNode * n = new QueueNode(bev, str);
     n->data = str;
     
-    if (this->mode | MULTI_PRODUCER)
+    if (this->mode & MULTI_PRODUCER)
     {
         pthread_mutex_lock(&this->producerLock);
         this->tail->next = n;
@@ -95,8 +95,10 @@ void Queue::enqueue(struct bufferevent* bev, string str)
         this->tail = this->tail->next;
         this->_size++;
     }
-    if (this->mode | HAS_CONSUMER)
+    if (this->mode & HAS_CONSUMER)
+    {
         this->_consumer->dispatch((void*)this);
+    }
 }
 void Queue::set(void * arg, string arg2)
 {
@@ -107,7 +109,7 @@ QueueNode Queue::dequeue()
 {
     string data = "";
     struct bufferevent * b = NULL;
-    if (this->mode | MULTI_CONSUMER)
+    if (this->mode & MULTI_CONSUMER)
     {
         pthread_mutex_lock(&this->consumerLock);
         if (this->head->next != NULL)
@@ -120,7 +122,7 @@ QueueNode Queue::dequeue()
             delete h;
             this->_size--;
         }
-        pthread_mutex_lock(&this->consumerLock);
+        pthread_mutex_unlock(&this->consumerLock);
     }
     else
     {
@@ -135,8 +137,11 @@ QueueNode Queue::dequeue()
             this->_size--;
         }
     }
-    if (this->mode | HAS_PRODUCER)
+    if (this->mode & HAS_PRODUCER)
+    {
         this->_producer->signal();
+    }
+
     return QueueNode(b,data);
 }
 

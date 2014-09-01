@@ -14,29 +14,16 @@
 #include "../protos/query.pb.h"
 #include "ThreadPool.h"
 #include "RedisOperator.h"
-//#include "ThreadHandler.h"
 #include "InterfaceServer.h"
 
 
 using namespace std;
 
-/*  
-void doEnqueue(struct bufferevent * bev, string data)
+void* handle(void* db, void* arg)
 {
-    q.enqueue(bev, data);
-}
-*/
-//this lock is used to lock consumers
-//
-void* handle(void* arg)
-{
-    printf("running thread..\n");
-    Queue* q =(Queue*)arg;
-    q->lockConsumer();
-    QueueNode node = q->dequeue();
-    q->unlockConsumer();
-
-    RedisOperator redis("127.0.0.1", 6379, "");
+    Queue* queue =(Queue*)arg;
+    RedisOperator* redis = (RedisOperator*)db;
+    QueueNode node = queue->dequeue();
 
             google::protobuf::Message * message = decode(node.data);
             if (!message)
@@ -56,11 +43,10 @@ void* handle(void* arg)
 
                 printf("cmd is %s,%s\n",getIpCmd, getPortCmd);
                 
-                redis.selectDatabase("0");
-                printf("select database\n");
+                redis->selectDatabase("0");
                 
-                string ip = redis.queryString(string(getIpCmd));
-                string port = redis.queryString(getPortCmd);
+                string ip = redis->queryString(string(getIpCmd));
+                string port = redis->queryString(getPortCmd);
                 printf("ip is %s, port is %s\n", ip.c_str(), port.c_str());
 /*  
                 char output[100];
@@ -80,23 +66,24 @@ int main()
 
     ThreadFunc pThreadFunc = handle;
     ThreadPool pool;
-    pool.init(1,1);
+    pool.init(1,3);
     pool.start(&pThreadFunc);
-
+    sleep(1);    
+    
     Queue q;
     q.registerConsumer(&pool, true);
-
-	InterfaceServer server = InterfaceServer(9999);
+    
+    InterfaceServer server = InterfaceServer(9999);
     server.registMsgContainer(&q);
 
-
-
+    server.init();
+   
     //start loop 
     server.start();
 
 
     cout << "about to exit" <<endl;
-    sleep(3);
+    sleep(100);
 
     return 0;
 }

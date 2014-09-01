@@ -17,6 +17,7 @@ class InterfaceServer
         void registMsgContainer(MsgContainer * c);
         MsgContainer* getMsgContainer();
 
+        int init();
 		void start();
     
     public:

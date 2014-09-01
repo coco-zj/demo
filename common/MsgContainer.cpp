@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  common.h
+ *       Filename:  MsgContainer.cpp
  *
  *    Description:  jj
  *
  *        Version:  1.0
- *        Created:  08/27/2014 03:08:23 PM
+ *        Created:  09/01/2014 09:58:54 AM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,18 +15,9 @@
  *
  * =====================================================================================
  */
-#ifndef __COMMON_H__
-#define __COMMON_H__
 
-#include <event2/bufferevent.h>
-#include <string>
-using namespace std;
+#include "MsgContainer.h"
 
+MsgContainer::~MsgContainer(){};
 
-typedef void (*MsgDispatchFunc) (void* owner, struct bufferevent * bev, string data);
-typedef void* (*ThreadFunc) (void* db, void * arg);
-
-
-#endif
-
-
+void MsgContainer::set(void* arg, string arg2){};

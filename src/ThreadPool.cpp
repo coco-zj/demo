@@ -23,12 +23,14 @@
 
 void* thread_ready(void *arg);
 
+/*  
 ThreadPool::ThreadPool()
 {
 }
 ThreadPool::~ThreadPool()
 {
 }
+*/
 
 void ThreadPool::init(int min, int max)
 {
@@ -55,7 +57,6 @@ void ThreadPool::init(int min, int max)
         pthread_cond_init(&(info->cond),NULL);
         info->pool = this;
         this->thread_list.push_back(info);
-        this->currThreads++;
     }
 }
 
@@ -114,13 +115,13 @@ void ThreadPool::dispatch(void * arg)
 {
     ThreadInfo * info;
     pthread_mutex_lock(&this->lock);
-    
-    if (this->idle_list.size())
+
+    if (!this->idle_list.size())
     {
         if (this->currThreads < this->maxThreads)
             this->addWorker();
         pthread_mutex_unlock(&this->lock);
-        return;
+        return ; //this dispatch will miss...
     }
     info = this->idle_list.front();
     this->idle_list.pop_front();
@@ -128,30 +129,31 @@ void ThreadPool::dispatch(void * arg)
     pthread_cond_signal(&info->cond);
     pthread_mutex_unlock(&this->lock);
 
-
 }
 
-
+/*  
+ *  this->lock is always required before called
+ *
+ */
 int ThreadPool::addWorker()
 {
-    ThreadInfo * info = new ThreadInfo();
-    if (!info)
+    if (this->currThreads < this->maxThreads)
     {
-        printf("new ThreadInfo failed\n");
-        return -1;
-    }
-    pthread_cond_init(&info->cond,NULL);
-    info->pool = this;
-    
-    pthread_mutex_lock(&this->lock);
-    this->thread_list.push_back(info);
-    pthread_mutex_unlock(&this->lock);
-
-    if (pthread_create(&info->th, NULL, thread_ready ,(void*)info))
-    {
-        printf("addWorker,pthread_create failed\n");
-        delete info;
-        return -1;
+        ThreadInfo * info = new ThreadInfo();
+        if (!info)
+        {
+            printf("new ThreadInfo failed\n");
+            return -1;
+        }
+        pthread_cond_init(&info->cond,NULL);
+        info->pool = this;
+        if (pthread_create(&info->th, NULL, thread_ready ,(void*)info))
+        {
+            printf("addWorker,pthread_create failed\n");
+            delete info;
+            return -1;
+        }
+        this->thread_list.push_back(info);
     }
     return 0;
 }
@@ -176,39 +178,46 @@ void* thread_ready(void* arg)
     ThreadInfo * info = (ThreadInfo*) arg;
     ThreadPool * pool = info->pool;
     
-    //MAYBE NEED TO GET REDIS CONNECTED
-    //
     pthread_detach(pthread_self());
 
-    pthread_mutex_lock(pool->get_lock());
+    info->redis = new RedisOperator("127.0.0.1", 6379, "");
+    if (!info->redis)
+    {
+        printf("can't not connect to database\n");
+        return NULL;
+    }
+    
+    pool->lockPool();
     pool->currThreads++;
-    pthread_mutex_unlock(pool->get_lock());
+    pool->unlockPool();
+
     
     while (!pool->isDestroying())
     {
-        pthread_mutex_lock(pool->get_lock());
+        pool->lockPool();
         pool->idle_list.push_back(info);
         pthread_cond_wait(&info->cond, pool->get_lock());
-        pthread_mutex_unlock(pool->get_lock());
-
+        pool->unlockPool();
         if (pool->isDestroying() || info->existing)
         {
             break;
         }
         //Do the real job
         ThreadFunc* func = pool->thread_func;
-        (*func)(arg);
+        (*func)((void*)info->redis, info->arg);
     }
     //existing state
-    pthread_mutex_lock(pool->get_lock());
+    pool->lockPool();
     pool->currThreads--;
+
     //delete from thread_list
     for (int i=0; i < pool->thread_list.size(); ++i)
         if (pool->thread_list.at(i) == info)
             pool->thread_list.erase(pool->thread_list.begin()+i);
-
-    pthread_mutex_unlock(pool->get_lock());
-
+    pool->unlockPool();
+    
+    delete info->redis;
+    info->redis = NULL;
     return NULL;
 }
 

@@ -96,7 +96,7 @@ int main()
         cout << (int)*(result.c_str()+i) << " ";
     cout << endl;
 */
-    for( int i = 0; i < 1; ++i)
+    for( int i = 0; i < 10; ++i)
     {
         if( send(sockfd, result.c_str(), result.size(), 0) < 0 )
         {
