@@ -96,7 +96,7 @@ int main()
         cout << (int)*(result.c_str()+i) << " ";
     cout << endl;
 */
-    for( int i = 0; i < 10; ++i)
+    for( int i = 0; i < 1; ++i)
     {
         if( send(sockfd, result.c_str(), result.size(), 0) < 0 )
         {
@@ -111,7 +111,7 @@ int main()
 //    recv(sockfd, data, sizeof(data)-1,0);
 
  //   printf("reveive data is %s\n", data);
-    sleep(30);
+    sleep(1);
     close(sockfd);
     return 0;
 }

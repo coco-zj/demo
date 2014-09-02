@@ -16,8 +16,56 @@
 #include "RedisOperator.h"
 #include "InterfaceServer.h"
 
-
 using namespace std;
+
+string getDataFromSlave(string ip, int port, int data)
+{
+    sockaddr_in slavaddr;
+    memset(&slavaddr, '\0', sizeof(slavaddr));
+    slavaddr.sin_family = AF_INET;
+    slavaddr.sin_port = htons(port);
+    inet_pton(AF_INET, ip.c_str(), &slavaddr.sin_addr);
+    
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    char buffer [256];
+    memset(buffer, '\0', sizeof(buffer));
+    snprintf(buffer, sizeof(buffer)-1, "%d", data);
+    sendto(sockfd, buffer, strlen(buffer), 0,
+            (sockaddr*)&slavaddr, sizeof(slavaddr));
+    
+    socklen_t slen;
+    memset(buffer, '\0', sizeof(buffer));
+    recvfrom(sockfd, buffer, sizeof(buffer)-1, 0, (sockaddr*)&slavaddr, &slen); 
+
+    close(sockfd);
+    printf("buffer now is: %s\n", buffer);
+    return string(buffer);
+
+}
+
+int pickASlave(RedisOperator* redis)
+{
+    redis->selectDatabase("15");
+    int total = redis->queryInt("LLEN worker_list");
+    printf("total worker is :%d\n", total);
+    if (total < 1)
+    {
+        printf("currently no slaves are ready,this request ommitted\n");
+        return -1;
+    }
+    
+    srand(time(0));
+    int idx = rand() % total;
+
+    char getPortCmd[64];
+    memset(getPortCmd, '\0', sizeof(getPortCmd));
+    snprintf(getPortCmd, sizeof(getPortCmd)-1, "LINDEX worker_list %d", idx);
+    string pstring = redis->queryString(getPortCmd);
+    return atoi(pstring.c_str());
+
+}
+
 
 void* handle(void* db, void* arg)
 {
@@ -25,29 +73,25 @@ void* handle(void* db, void* arg)
     RedisOperator* redis = (RedisOperator*)db;
     QueueNode node = queue->dequeue();
 
+    int port = pickASlave(redis);
+    if (port < 0)
+        return NULL;
+
     google::protobuf::Message * message = decode(node.data);
     if (!message)
     {
         printf("decode failed\n");
+        return NULL;
     }
-    else
-    {
-        Query * q = dynamic_cast<Query*>(message);
-        printf("Query received(id:%d,from:%s)\n", q->id(), q->from().c_str());
-            
-        char getIpCmd[64], getPortCmd[64];
-        memset(getIpCmd, '\0', sizeof(getIpCmd));
-        memset(getPortCmd, '\0', sizeof(getPortCmd));
-        snprintf(getIpCmd, sizeof(getIpCmd)-1, "HGET SERVERIP_HT %d", q->id());
-        snprintf(getPortCmd, sizeof(getPortCmd)-1, "HGET SERVERPORT_HT %d", q->id());
+    //do 
+    Query * q = dynamic_cast<Query*>(message);
+    printf("Query received(id:%d,from:%s)\n", q->id(), q->from().c_str());
 
-        printf("cmd is %s,%s\n",getIpCmd, getPortCmd);
-                
-        redis->selectDatabase("0");
-                
-        string ip = redis->queryString(string(getIpCmd));
-        string port = redis->queryString(getPortCmd);
-        printf("ip is %s, port is %s\n", ip.c_str(), port.c_str());
+    //go to slave to get data
+    string data = getDataFromSlave("127.0.0.1", port, q->id());
+
+    printf("data from slave:%s\n", data.c_str());
+
 /*  
         char output[100];
         memset(output, '\0', sizeof(output));
@@ -56,7 +100,7 @@ void* handle(void* db, void* arg)
             q->from().c_str(), q->id(), ip.c_str(), port.c_str());
         bufferevent_write(node.bev, (void*)output, strlen(output));
 */
-    }
+    
     delete message;
     return NULL;
 }
