@@ -92,14 +92,14 @@ void* handle(void* db, void* arg)
 
     printf("data from slave:%s\n", data.c_str());
 
-/*  
-        char output[100];
-        memset(output, '\0', sizeof(output));
-        snprintf(output, sizeof(output)-1, 
-            "hi %s,requese id %d accepte.\nfrom redis:ip:%s,port:%s\n",
-            q->from().c_str(), q->id(), ip.c_str(), port.c_str());
-        bufferevent_write(node.bev, (void*)output, strlen(output));
-*/
+  
+    char output[100];
+    memset(output, '\0', sizeof(output));
+    snprintf(output, sizeof(output)-1, 
+            "hi %s,request id %d accepted.\nfrom slave(port:%d):%s\n",
+            q->from().c_str(), q->id(), port, data.c_str());
+    bufferevent_write(node.bev, (void*)output, strlen(output));
+
     
     delete message;
     return NULL;
@@ -127,7 +127,7 @@ int main()
 
 
     cout << "about to exit" <<endl;
-    sleep(100);
+    sleep(10);
 
     return 0;
 }
